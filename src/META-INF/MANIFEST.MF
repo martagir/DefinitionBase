@@ -1,0 +1,14 @@
+Manifest-Version: 1.0
+Class-Path: maven-junit-plugin-1.4.jar maven-plugin-api-2.0.jar junit-
+ 4.5.jar maven-project-2.1.0.jar maven-settings-2.1.0.jar maven-model-
+ 2.1.0.jar plexus-utils-1.5.6.jar plexus-interpolation-1.8.1.jar plexu
+ s-container-default-1.0-alpha-9-stable-1.jar classworlds-1.1-alpha-2.
+ jar maven-profile-2.1.0.jar maven-artifact-manager-2.1.0.jar maven-re
+ pository-metadata-2.1.0.jar maven-artifact-2.1.0.jar wagon-provider-a
+ pi-1.0-beta-5.jar backport-util-concurrent-3.1.jar maven-plugin-regis
+ try-2.1.0.jar ant-1.7.1.jar ant-launcher-1.7.1.jar istack-commons-tes
+ t-1.0.jar ant-junit-1.7.1.jar dom4j-1.6.1.jar xml-apis-1.0.b2.jar com
+ mons-io-1.4.jar parallel-junit-1.1.jar remoting-1.333.jar junit-4.10.
+ jar hamcrest-core-1.1.jar sqlite-jdbc-3.20.1.1.jar
+Main-Class: gui.Gui
+
