@@ -12,9 +12,9 @@ import java.util.List;
  * Created by Tagirov on 26.06.2018.
  */
 public class DB {
-    public static Connection conn;
-    public static Statement stmt;
-    public static ResultSet resSet;
+   private static Connection conn;
+   private static Statement stmt;
+   private static ResultSet resSet;
 
     // --------ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ--------
     public static void connectAndCreateDb() throws ClassNotFoundException, SQLException {
@@ -46,10 +46,10 @@ public class DB {
         prepStmt.setInt(2, status);
         prepStmt.setString(3, definition);
         prepStmt.setString(4, fullDescription);
-
         prepStmt.execute();
-        ResultSet resSet = prepStmt.getGeneratedKeys();
-        int id = resSet.getInt(1);
+
+        ResultSet generatedKeys = prepStmt.getGeneratedKeys();
+        int id = generatedKeys.getInt(1);
         System.out.println("Запись успешно вставлена. (id = " + id + ")");
         return id;
     }
@@ -133,8 +133,8 @@ public class DB {
         return records;
     }
 
+    //ищет записи, в названии которых содержится введенная строка
     public static List<Record> findByFilter(String searchString, int status) throws ClassNotFoundException, SQLException {
-//        String lowerCaseSearchString = searchString.toLowerCase();
         List<String> whereClause = new ArrayList<>();
         String sqlQuery = "SELECT * FROM records";
         if (!searchString.isEmpty()) {
@@ -149,6 +149,7 @@ public class DB {
         return DB.query(sqlQuery);
     }
 
+    //данный метод ищет в базе записи, у которых в определении или полном описании встречается заданная строка
     public static List<CellInfo> findByQueryString(String queryString) throws ClassNotFoundException, SQLException {
         List<CellInfo> cellInfos = new ArrayList<>();
         String sqlQuery = "SELECT * FROM records WHERE definition LIKE \"%" + queryString + "%\" OR full_description LIKE \"%" + queryString + "%\"";

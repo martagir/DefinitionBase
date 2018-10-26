@@ -11,6 +11,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -55,7 +56,7 @@ public class Gui extends JFrame {
     private JScrollPane extSearchResultScrollPane;
 
     private MainListModel recordListModel = new MainListModel();
-    ;
+
     private ExtSearchResultsListModel extSearchResultsListModel = new ExtSearchResultsListModel();
 
     private JLabel searchLabel = new JLabel();
@@ -307,6 +308,7 @@ public class Gui extends JFrame {
                 toggleSaveButtonState();
                 recordList.clearSelection();
                 disableButtons();
+                name.requestFocus();
             }
         });
         buttonPanel.add(Box.createHorizontalStrut(10));
@@ -625,6 +627,8 @@ public class Gui extends JFrame {
                     statusButton.setVisible(true);
                     refreshStatusIcon();
                     disableFields();
+                    definition.setCaretPosition(0);
+                    fullDescription.setCaretPosition(0);
                 }
             }
         }

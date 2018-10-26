@@ -113,7 +113,9 @@ public class MainListModel extends AbstractListModel<String> {
     private List<Record> reloadList() {
         List<Record> list = null;
         try {
-            list = DB.findByFilter(searchString, filterStatus);
+            //TODO сделать реализацию прямо тут
+//            list = DB.findByFilter(searchString, filterStatus);
+            list = findByNameWithFilter(searchString);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
@@ -133,5 +135,16 @@ public class MainListModel extends AbstractListModel<String> {
             }
         }
         return suitableResults;
+    }
+
+    private List<Record> findByNameWithFilter(String searchString) throws SQLException, ClassNotFoundException {
+        List<Record> allRecords = DB.getAll();
+        List<Record> filteredRecords = new ArrayList<>();
+        for (Record record : allRecords) {
+            if (record.getName().toLowerCase().contains(searchString.toLowerCase()) && (filterStatus == 0 || record.getStatus() == filterStatus)) {
+                filteredRecords.add(record);
+            }
+        }
+        return filteredRecords;
     }
 }

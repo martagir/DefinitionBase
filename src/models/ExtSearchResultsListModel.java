@@ -1,5 +1,6 @@
 package models;
 
+import bean.Record;
 import database.DB;
 
 import javax.swing.*;
@@ -59,7 +60,9 @@ public class ExtSearchResultsListModel extends AbstractListModel {
             if (oldSize > 0) {
                 fireIntervalRemoved(this, 0, oldSize - 1);
             }
-            cellInfos = DB.findByQueryString(searchStringForExtSearch);
+            //TODO вызывать метод из модели
+//            cellInfos = DB.findByQueryString(searchStringForExtSearch);
+            cellInfos = findByQueryString(searchStringForExtSearch);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException e) {
@@ -67,6 +70,60 @@ public class ExtSearchResultsListModel extends AbstractListModel {
         }
         foundRecords = cellInfos;
         fireContentsChanged(this, 0, foundRecords.size());
+        return cellInfos;
+    }
+
+    private List<CellInfo> findByQueryString(String searchStringForExtSearch) throws SQLException, ClassNotFoundException {
+        List<Record> records = DB.getAll();
+        List<Record> suitableRecords = new ArrayList<>();
+        List<CellInfo> cellInfos = new ArrayList<>();
+        String searchStringLowerCase = searchStringForExtSearch.toLowerCase();
+        for (Record record : records) {
+            if (record.getDefinition().toLowerCase().contains(searchStringLowerCase.toLowerCase()) ||
+                    record.getFullDescription().toLowerCase().contains(searchStringLowerCase.toLowerCase())) {
+                suitableRecords.add(record);
+            }
+        }
+        for (Record record : suitableRecords) {
+            String content = "";
+            int offset = 100;
+            int foundIndex;
+            int lowerBound;
+            int upperBound;
+            String lowerCaseDefinition = record.getDefinition().toLowerCase();
+            String lowerCaseFullDescription = record.getFullDescription().toLowerCase();
+            if (lowerCaseDefinition.contains(searchStringLowerCase)) {
+                foundIndex = lowerCaseDefinition.indexOf(searchStringLowerCase);
+                if (foundIndex - offset < 0) {
+                    lowerBound = 0;
+                } else {
+                    lowerBound = foundIndex - offset - 1;
+                }
+                if (foundIndex + offset > lowerCaseDefinition.length()) {
+                    upperBound = lowerCaseDefinition.length() - 1;
+                } else {
+                    upperBound = foundIndex + offset - 1;
+                }
+                content = lowerCaseDefinition.substring(lowerBound, upperBound);
+            } else {
+                foundIndex = lowerCaseFullDescription.indexOf(searchStringLowerCase);
+                if (foundIndex - offset < 0) {
+                    lowerBound = 0;
+                } else {
+                    lowerBound = foundIndex - offset - 1;
+                }
+                if (foundIndex + offset > lowerCaseFullDescription.length()) {
+                    upperBound = lowerCaseFullDescription.length() - 1;
+                } else {
+                    upperBound = foundIndex + offset - 1;
+                }
+                content = lowerCaseFullDescription.substring(lowerBound, upperBound);
+            }
+            CellInfo cellInfo = new CellInfo();
+            cellInfo.setTitle(record.getName());
+            cellInfo.setContent(content);
+            cellInfos.add(cellInfo);
+        }
         return cellInfos;
     }
 }
