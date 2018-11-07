@@ -13,14 +13,13 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import java.awt.event.*;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by Tagirov on 16.07.2018.
@@ -49,6 +48,7 @@ public class Gui extends JFrame {
     private JList recordList;
     private JList extSearchResultsList;
     private List<ImageIcon> statusImages = new ArrayList<>();
+    private Map<KeyStroke, Action> actionMap = new HashMap<>();
     private JSplitPane splitPane;
     private JScrollPane recordListScrollPane;
     private JScrollPane definitionScrollPane;
@@ -256,10 +256,8 @@ public class Gui extends JFrame {
         buttonPanel.add(Box.createHorizontalGlue());
 
 
-        buttonPanel.add(cancelButton = new JButton("Отмена"));
-        buttonPanel.add(Box.createHorizontalStrut(10));
-        toggleCancelButtonState();
-        cancelButton.addActionListener(new ActionListener() {
+        KeyStroke keyCancel = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+        actionMap.put(keyCancel, new AbstractAction("Отмена") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 clearFields();
@@ -270,10 +268,17 @@ public class Gui extends JFrame {
                 enableButtons();
             }
         });
+        cancelButton = new JButton(actionMap.get(keyCancel));
+        cancelButton.getActionMap().put("performCancel", actionMap.get(keyCancel));
+        cancelButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyCancel, "performCancel");
+        buttonPanel.add(cancelButton);
+
+        buttonPanel.add(Box.createHorizontalStrut(10));
+        toggleCancelButtonState();
 
 
-        buttonPanel.add(saveToBaseButton = new JButton("Сохранить"));
-        saveToBaseButton.addActionListener(new ActionListener() {
+        KeyStroke keySave = KeyStroke.getKeyStroke(KeyEvent.VK_S, Event.CTRL_MASK);
+        actionMap.put(keySave, new AbstractAction("Сохранить") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 toggleCancelButtonState();
@@ -286,6 +291,7 @@ public class Gui extends JFrame {
                     toggleSaveButtonState();
                     enableButtons();
                     refreshStatusIcon();
+                    name.setFocusable(false);
                 } catch (SQLException e1) {
                     e1.printStackTrace();
                 } catch (ClassNotFoundException e1) {
@@ -293,11 +299,16 @@ public class Gui extends JFrame {
                 }
             }
         });
+        saveToBaseButton = new JButton(actionMap.get(keySave));
+        saveToBaseButton.getActionMap().put("performSave", actionMap.get(keySave));
+        saveToBaseButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keySave, "performSave");
+        buttonPanel.add(saveToBaseButton);
+
         buttonPanel.add(Box.createHorizontalStrut(10));
 
 
-        buttonPanel.add(createButton = new JButton("Создать"));
-        createButton.addActionListener(new ActionListener() {
+        KeyStroke keyCreate = KeyStroke.getKeyStroke(KeyEvent.VK_N, Event.CTRL_MASK);
+        actionMap.put(keyCreate, new AbstractAction("Создать") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 toggleCancelButtonState();
@@ -308,14 +319,19 @@ public class Gui extends JFrame {
                 toggleSaveButtonState();
                 recordList.clearSelection();
                 disableButtons();
+                name.setFocusable(true);
                 name.requestFocus();
             }
         });
+        createButton = new JButton(actionMap.get(keyCreate));
+        createButton.getActionMap().put("performCreate", actionMap.get(keyCreate));
+        createButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyCreate, "performCreate");
+        buttonPanel.add(createButton);
+
         buttonPanel.add(Box.createHorizontalStrut(10));
 
-
-        buttonPanel.add(editButton = new JButton("Редактировать"));
-        editButton.addActionListener(new ActionListener() {
+        KeyStroke keyEdit = KeyStroke.getKeyStroke(KeyEvent.VK_E, Event.CTRL_MASK);
+        actionMap.put(keyEdit, new AbstractAction("Редактировать") {
             @Override
             public void actionPerformed(ActionEvent e) {
                 toggleCancelButtonState();
@@ -328,11 +344,40 @@ public class Gui extends JFrame {
                 disableButtons();
             }
         });
+        editButton = new JButton(actionMap.get(keyEdit));
+        editButton.getActionMap().put("performEdit", actionMap.get(keyEdit));
+        editButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyEdit, "performEdit");
+        buttonPanel.add(editButton);
+
         buttonPanel.add(Box.createHorizontalStrut(10));
 
+        KeyStroke keyDelete = KeyStroke.getKeyStroke(KeyEvent.VK_D, Event.CTRL_MASK);
+        actionMap.put(keyDelete, new AbstractAction("Удалить") {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = recordList.getSelectedIndex();
+                recordListModel.remove(index);
 
-        buttonPanel.add(deleteFromBaseButton = new JButton("Удалить"));
-        deleteFromBaseButton.addActionListener(new DeleteButtonListener());
+                if (index == -1) { //пустая база, делаем кнопку "Удалить" неактивной
+                    deleteFromBaseButton.setEnabled(false);
+
+                } else { //выбрать индекс
+                    if (index == recordListModel.getSize()) {
+                        //удаляем индекс в конечной позиции
+                        index--;
+                    }
+
+                    recordList.setSelectedIndex(index);
+                    fillFieldsWithInfo(recordList.getSelectedIndex());
+                    refreshStatusIcon();
+                    recordList.ensureIndexIsVisible(index);
+                }
+            }
+        });
+        deleteFromBaseButton = new JButton(actionMap.get(keyDelete));
+        deleteFromBaseButton.getActionMap().put("performDelete", actionMap.get(keyDelete));
+        deleteFromBaseButton.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyDelete, "performDelete");
+        buttonPanel.add(deleteFromBaseButton);
     }
 
     private void initNameAndStatusPanel() {
@@ -428,7 +473,6 @@ public class Gui extends JFrame {
         extSearchInputPanel.add(Box.createHorizontalStrut(5));
         extSearchInputPanel.add(extendedSearchButton = new JButton("Найти"));
 
-        //TODO доделать расширенный поиск
 
         extSearchResultsList = new JList(extSearchResultsListModel);
         extSearchResultsList.setVisibleRowCount(20);
@@ -585,29 +629,6 @@ public class Gui extends JFrame {
         refreshStatusIcon();
     }
 
-    //класс-слушатель для кнопки "Удалить"
-    class DeleteButtonListener implements ActionListener {
-        public void actionPerformed(ActionEvent e) {
-            int index = recordList.getSelectedIndex();
-            recordListModel.remove(index);
-
-            if (index == -1) { //пустая база, делаем кнопку "Удалить" неактивной
-                deleteFromBaseButton.setEnabled(false);
-
-            } else { //выбрать индекс
-                if (index == recordListModel.getSize()) {
-                    //удаляем индекс в конечной позиции
-                    index--;
-                }
-
-                recordList.setSelectedIndex(index);
-                fillFieldsWithInfo(recordList.getSelectedIndex());
-                refreshStatusIcon();
-                recordList.ensureIndexIsVisible(index);
-            }
-        }
-    }
-
     class RecordListListener implements ListSelectionListener {
         public void valueChanged(ListSelectionEvent e) {
             if (!e.getValueIsAdjusting() == false) {
@@ -644,5 +665,13 @@ public class Gui extends JFrame {
             e.printStackTrace();
         }
         new Gui();
+    }
+
+    //TODO
+    class Timer implements Runnable {
+        @Override
+        public void run() {
+
+        }
     }
 }
